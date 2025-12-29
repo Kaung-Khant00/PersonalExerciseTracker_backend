@@ -23,7 +23,7 @@ exports.validateNumericField = (value, fieldName, res, required = false) => {
 };
 
 exports.validateActivityData = (data, res) => {
-  const { userId, avgSpeed, maxSpeed, distance, duration } = data;
+  const { userId, avgSpeed, maxSpeed, distance, duration, title } = data;
   if (!userId) {
     return res.status(400).json({ message: "userId is required" });
   }

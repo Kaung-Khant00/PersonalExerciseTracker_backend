@@ -26,6 +26,11 @@ const ActivitySchema = new mongoose.Schema({
     type: Number,
     require: true,
   },
+  rideIntensity: {
+    type: String,
+    enum: ["Easy", "Medium", "Hard", "Extreme"],
+    require: true,
+  },
   date: {
     type: Date,
     default: () => Date.now(),
