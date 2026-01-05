@@ -23,28 +23,20 @@ exports.validateNumericField = (value, fieldName, res, required = false) => {
 };
 
 exports.validateActivityData = (data, res) => {
-  const { userId, avgSpeed, maxSpeed, distance, duration, title } = data;
-  if (!userId) {
-    return res.status(400).json({ message: "userId is required" });
-  }
+  const { maxSpeed, distance, duration, title, rideIntensity } = data;
   if (title.length > 200) {
     return res
       .status(400)
       .json({ message: "Title cannot exceed 200 characters" });
   }
-  exports.validateNumericField(avgSpeed, "Average Speed", res, true);
   exports.validateNumericField(maxSpeed, "Max Speed", res, true);
   exports.validateNumericField(distance, "Distance", res, true);
   exports.validateNumericField(duration, "Duration", res, true);
-  if (maxSpeed < avgSpeed) {
-    return res
-      .status(400)
-      .json({ message: "Max Speed cannot be less than Average Speed" });
-  }
+  validateRideIntensity(rideIntensity, res);
 };
 exports.validateUpdateActivityData = (data, res) => {
-  const { title, avgSpeed, maxSpeed, distance, duration } = data;
-  if (!title && !avgSpeed && !maxSpeed && !distance && !duration) {
+  const { title, maxSpeed, distance, duration, rideIntensity } = data;
+  if (!title && !maxSpeed && !distance && !duration) {
     return res
       .status(400)
       .json({ message: "At least one field must be provided for update" });
@@ -54,13 +46,18 @@ exports.validateUpdateActivityData = (data, res) => {
       .status(400)
       .json({ message: "Title cannot exceed 200 characters" });
   }
-  exports.validateNumericField(avgSpeed, "Average Speed", res, false);
   exports.validateNumericField(maxSpeed, "Max Speed", res, false);
   exports.validateNumericField(distance, "Distance", res, false);
   exports.validateNumericField(duration, "Duration", res, false);
-  if (avgSpeed !== undefined && maxSpeed !== undefined && maxSpeed < avgSpeed) {
-    return res
-      .status(400)
-      .json({ message: "Max Speed cannot be less than Average Speed" });
-  }
+  validateRideIntensity(rideIntensity, res);
 };
+
+function validateRideIntensity(rideIntensity, res) {
+  const validIntensities = ["Low", "Medium", "Hard", "Extreme"];
+  if (!validIntensities.includes(rideIntensity)) {
+    return res.status(400).json({
+      message: `rideIntensity must be one of: ${validIntensities.join(", ")}`,
+    });
+  }
+  return true;
+}

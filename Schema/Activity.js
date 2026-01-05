@@ -4,7 +4,7 @@ const ActivitySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    require: true,
+    required: true,
   },
   title: {
     type: String,
@@ -12,29 +12,60 @@ const ActivitySchema = new mongoose.Schema({
   },
   avgSpeed: {
     type: Number,
-    require: true,
+    required: true,
   },
   maxSpeed: {
     type: Number,
-    require: true,
+    required: true,
   },
   distance: {
     type: Number,
-    require: true,
+    required: true,
   },
   duration: {
     type: Number,
-    require: true,
+    required: true,
   },
   rideIntensity: {
     type: String,
     enum: ["Easy", "Medium", "Hard", "Extreme"],
-    require: true,
+    required: true,
   },
   date: {
     type: Date,
-    default: () => Date.now(),
+    default: Date.now,
   },
 });
+
+ActivitySchema.statics.getActivities = async function (userId) {
+  const match = {};
+  if (userId) {
+    match.userId = mongoose.Types.ObjectId.isValid(userId)
+      ? new mongoose.Types.ObjectId(userId)
+      : userId;
+  }
+
+  return this.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: null,
+        totalDistance: { $sum: "$distance" },
+        totalDuration: { $sum: "$duration" },
+        maxDistance: { $max: "$distance" },
+        minDistance: { $min: "$distance" },
+        maxDuration: { $max: "$duration" },
+        minDuration: { $min: "$duration" },
+        maxAvgSpeed: { $max: "$avgSpeed" },
+        minAvgSpeed: { $min: "$avgSpeed" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+      },
+    },
+  ]);
+};
 
 module.exports = mongoose.model("Activity", ActivitySchema);

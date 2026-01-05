@@ -7,9 +7,10 @@ const {
 } = require("../utils/validator");
 
 exports.createActivity = async (req, res) => {
-  const { userId, title, avgSpeed, maxSpeed, distance, duration } = req.body;
+  const { title, maxSpeed, distance, duration, rideIntensity } = req.body;
   validateActivityData(req.body, res);
-
+  const avgSpeed = (distance / (duration / 3600)).toFixed(2);
+  const userId = req.user.id;
   try {
     const newActivity = await Activity.create({
       userId,
@@ -18,6 +19,7 @@ exports.createActivity = async (req, res) => {
       maxSpeed,
       distance,
       duration,
+      rideIntensity,
     });
 
     return res
@@ -46,8 +48,11 @@ exports.getActivities = async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   try {
-    const activities = await Activity.find({ userId: req.user.id });
-    return res.status(200).json({ activities });
+    const activities = await Activity.find({ userId: req.user.id }).sort({
+      date: -1,
+    });
+    const [summary] = await Activity.getActivities(req.user.id);
+    return res.status(200).json({ activities, summary });
   } catch (err) {
     return serverErrorResponse(res, err);
   }
@@ -60,6 +65,11 @@ exports.updateActivity = async (req, res) => {
   if (!req.body) {
     return res.status(400).json({ message: "No data provided for update" });
   }
+  const { distance, duration } = req.body;
+  const avgSpeed = (distance / (duration / 3600)).toFixed(2);
+
+  req.body.avgSpeed = avgSpeed;
+
   validateUpdateActivityData(req.body, res);
   try {
     const updatedActivity = await Activity.findByIdAndUpdate(
@@ -79,7 +89,13 @@ exports.updateActivity = async (req, res) => {
 };
 
 exports.deleteActivity = async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.activityId)) {
+    return res.status(400).json({ message: "Invalid Activity ID" });
+  }
+
   try {
+    await Activity.findByIdAndDelete(req.params.activityId);
+    return res.status(200).json({ message: "Activity deleted successfully" });
   } catch (err) {
     return serverErrorResponse(res, err);
   }

@@ -14,7 +14,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://192.168.100.71:5173", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -22,14 +22,19 @@ app.use(
 
 app.use(cookieParser());
 
+/* app.use("/", (req, res) => {
+  console.log("API is running...");
+  return res.status(200).json({ message: "API is running..." });
+}); */
+
 app.use(express.json());
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/activities", protectedMiddleware, activityRoutes);
 app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on 0.0.0.0:${PORT}`);
   connectDB();
 });
 
